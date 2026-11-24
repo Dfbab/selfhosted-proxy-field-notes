@@ -146,6 +146,25 @@ WantedBy=multi-user.target
 - **抗丢包**：Brutal 拥塞控制在丢包时仍能维持较高吞吐（TCP 会在丢包时把窗口砍半）
 - **QUIC 底座**：UDP 流级多路复用，没有 TCP 队头阻塞
 
+
+### 连上了但打不开网页？先查 IPv6
+
+**症状**：客户端显示已连接，百度能开，谷歌打不开；浏览器报 `ERR_CONNECTION_CLOSED` 或 `ERR_QUIC_PROTOCOL_ERROR`。
+
+**原因**：手机/电脑优先把域名解析成 **IPv6**，而服务器只有 IPv4。服务端日志会明说：
+
+```
+WARN TCP error ... reqAddr: "[2001:4860:...]:443"
+  error: "dial tcp6 [2001:4860:...]:443: connect: cannot assign requested address"
+```
+
+**排查与修复**：
+- 服务器：`ip -6 addr`（没有 `inet6` 就是没 IPv6）、`sysctl net.ipv6.conf.all.disable_ipv6`（为 1 表示系统关闭）
+- 客户端：**关闭 IPv6**，或把 DNS 策略改成「仅 IPv4 / Prefer IPv4」
+- 注意：**百度能开不代表代理通**——国内域名走的是分流直连，谷歌才是真正的测试目标
+
+> 备选：RackNerd 等商家可免费申请 IPv6 /64，但需要手工配置网络，新手不建议折腾。
+
 ## 六、其他踩过的坑
 
 1. **VPS 控制台（VNC）键盘输入会丢字符**，大写字母要手动 `Shift+字母`；密码含大写时用慢速逐键输入。
