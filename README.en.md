@@ -144,6 +144,25 @@ WantedBy=multi-user.target
 - **Loss tolerance**: Brutal congestion control keeps throughput high under loss (TCP halves its window)
 - **QUIC underneath**: stream-level multiplexing without TCP head-of-line blocking
 
+
+### Connected but pages won't load? Check IPv6 first
+
+**Symptoms**: the client reports connected, Baidu works, Google does not; the browser shows `ERR_CONNECTION_CLOSED` or `ERR_QUIC_PROTOCOL_ERROR`.
+
+**Cause**: the phone/PC resolves the domain to an **IPv6** address first, but the server only has IPv4. The server log says it plainly:
+
+```
+WARN TCP error ... reqAddr: "[2001:4860:...]:443"
+  error: "dial tcp6 [2001:4860:...]:443: connect: cannot assign requested address"
+```
+
+**Diagnose and fix**:
+- Server: `ip -6 addr` (no `inet6` = no IPv6), `sysctl net.ipv6.conf.all.disable_ipv6` (1 = disabled)
+- Client: **disable IPv6**, or set the DNS strategy to "IPv4 only / Prefer IPv4"
+- Note: **Baidu working proves nothing** — domestic domains are routed directly by the split rules; Google is the real test
+
+> Alternative: RackNerd and similar providers hand out a free IPv6 /64 on request, but it requires manual network configuration and is not recommended for beginners.
+
 ## 6. Other gotchas
 
 1. **A VNC console can drop keystrokes**; uppercase letters need an explicit `Shift+letter`, and passwords with capitals should be typed slowly.
